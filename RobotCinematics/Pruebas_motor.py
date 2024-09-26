@@ -6,26 +6,26 @@ def set_speed(value):
     EN1.value = value
     IN1.on()
     IN2.off()
-    IN3.off()
-    IN4.on()
+    IN3.on()
+    IN4.off()
     EN2.value = value
 
 def reversa():
     """Set the motor speed using PWM."""
-    EN1.value = 0.5
+    EN1.value = 0.7
     IN1.off()
     IN2.on()
-    IN3.on()
-    IN4.off()
-    EN2.value = 0.5
+    IN3.off()
+    IN4.on()
+    EN2.value = 0.7
 
 def derecha():
     """Set the motor speed using PWM."""
     EN1.value = 0.2
     IN1.on()
     IN2.off()
-    IN3.off()
-    IN4.on()
+    IN3.on()
+    IN4.off()
     EN2.value = 0.6
 
 def izquierda():
@@ -33,15 +33,15 @@ def izquierda():
     EN1.value = 0.6
     IN1.on()
     IN2.off()
-    IN3.off()
-    IN4.on()
+    IN3.on()
+    IN4.off()
     EN2.value = 0.2
 
 if __name__ == "__main__":
-    IN1 = LED(17)
+    IN1 = LED(17) 
     IN2 = LED(27)
     EN1 = PWMLED(13, active_high=True, initial_value=0)
-    IN3 = LED(1)
+    IN3 = LED(1) 
     IN4 = LED(7)
     EN2 = PWMLED(12, active_high=True, initial_value=0)
 
@@ -65,16 +65,19 @@ if __name__ == "__main__":
                 elif X == 0:
                     reversa()
                 elif X == 7:
-                    izquierda
+                    izquierda()
                 elif X == 8:
                     derecha()
                 else:
-                    print("Por favor ingrese un nÃºmero entre 1 y 6.")
+                    print("Por favor ingrese un número entre 1 y 6.")
             except ValueError:
-                print("Entrada invÃ¡lida. Por favor ingrese un nÃºmero.")
+                print("Entrada inválida. Por favor ingrese un número.")
 
     finally:
         print("Finishing program")
         EN1.value = 0.0
         IN1.off()
-        IN2.off()   
+        IN2.off()
+        EN2.value = 0.0
+        IN3.off()
+        IN4.off() 
