@@ -1,7 +1,9 @@
 from gpiozero import LED, PWMLED
 from time import sleep
 import pygame 
+import numpy as np
 import sys
+import cv2
 
 def set_speed(value):
     "Set the motor speed using PWM."
@@ -60,20 +62,23 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 run = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    set_speed(value)
-                elif event.key == pygame.K_DOWN:
-                    reversa()
-                elif event.key == pygame.K_LEFT:
-                    izquierda()
-                elif event.key == pygame.K_RIGHT:
-                    derecha()
-                elif event.key == pygame.K_e:
-                    set_speed(0.0)
-                elif event.key in speed_values:
+                if event.key in speed_values:
                     value = speed_values[event.key]
-                elif event.key == pygame.K_a:
-                    run = False
+            elif event.type == pygame.KEYUP:
+                set_speed(0)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            set_speed(value)
+        elif keys[pygame.K_DOWN]:
+            reversa()
+        elif keys[pygame.K_e]:
+            set_speed(0.0)
+        elif keys[pygame.K_a]:
+            run = False
+        if keys[pygame.K_LEFT]:
+            izquierda()
+        if keys[pygame.K_RIGHT]:
+            derecha()
         control_screen.fill('black')
         pygame.display.flip()
     pygame.quit()
@@ -84,5 +89,4 @@ if __name__ == "__main__":
     EN2.value = 0.0
     IN3.off()
     IN4.off() 
-    sys.exit()
-       
+    sys.exit()      
