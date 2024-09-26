@@ -3,7 +3,7 @@ from time import sleep
 import pygame 
 import numpy as np
 import sys
-import cv2
+import cv2 as cv
 
 def set_speed(value):
     "Set the motor speed using PWM."
@@ -33,7 +33,9 @@ def izquierda():
     EN1.value = 0.6
     EN2.value = 0.2
 
-    
+def open_camera():
+    cap = cv.VideoCapture(0)
+    return cap
 
 if __name__ == "__main__":
     pygame.init()
@@ -47,7 +49,6 @@ if __name__ == "__main__":
     IN3 = LED(1) 
     IN4 = LED(7)
     EN2 = PWMLED(12, active_high=True, initial_value=0)
-    
     speed_values = {
         pygame.K_0: 0.0,
         pygame.K_1: 0.2,
@@ -56,7 +57,10 @@ if __name__ == "__main__":
         pygame.K_4: 0.8,
         pygame.K_5: 1.0
     }
-    
+    cap = open_camera()
+    control = cap.isOpened()
+    if not control:
+        print("No se detecto una camara")
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -79,8 +83,17 @@ if __name__ == "__main__":
             izquierda()
         if keys[pygame.K_RIGHT]:
             derecha()
+        if control:
+            ret, frame = cap.read()
+            if ret:
+                cv.imshow('Camera',frame)
+                cv.waitKey(1)
         control_screen.fill('black')
         pygame.display.flip()
+        
+        
+    cv.destroyAllWindows()   
+    cap.release()
     pygame.quit()
     print("Finishing program")
     EN1.value = 0.0
