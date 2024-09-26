@@ -1,8 +1,10 @@
 from gpiozero import LED, PWMLED
 from time import sleep
+import pygame 
+import sys
 
 def set_speed(value):
-    """Set the motor speed using PWM."""
+    "Set the motor speed using PWM."
     EN1.value = value
     IN1.on()
     IN2.off()
@@ -11,73 +13,76 @@ def set_speed(value):
     EN2.value = value
 
 def reversa():
-    """Set the motor speed using PWM."""
+    "Set the motor speed using PWM."
     EN1.value = 0.7
     IN1.off()
     IN2.on()
     IN3.off()
     IN4.on()
-    EN2.value = 0.7
+    EN2.value = 0.5
 
 def derecha():
-    """Set the motor speed using PWM."""
+    "Set the motor speed using PWM."
     EN1.value = 0.2
-    IN1.on()
-    IN2.off()
-    IN3.on()
-    IN4.off()
     EN2.value = 0.6
 
 def izquierda():
-    """Set the motor speed using PWM."""
+    "Set the motor speed using PWM."
     EN1.value = 0.6
-    IN1.on()
-    IN2.off()
-    IN3.on()
-    IN4.off()
     EN2.value = 0.2
 
+    
+
 if __name__ == "__main__":
+    pygame.init()
+    control_screen = pygame.display.set_mode((240,180))
+    pygame.display.set_caption('control devices')
+    run = True
+    value = 0.0
     IN1 = LED(17) 
     IN2 = LED(27)
     EN1 = PWMLED(13, active_high=True, initial_value=0)
     IN3 = LED(1) 
     IN4 = LED(7)
     EN2 = PWMLED(12, active_high=True, initial_value=0)
-
-
-    speed_functions = {
-        1: lambda: set_speed(0.2),
-        2: lambda: set_speed(0.4),
-        3: lambda: set_speed(0.6),
-        4: lambda: set_speed(0.8),
-        5: lambda: set_speed(1.0),
+    
+    speed_values = {
+        pygame.K_0: 0.0,
+        pygame.K_1: 0.2,
+        pygame.K_2: 0.4,
+        pygame.K_3: 0.6,
+        pygame.K_4: 0.8,
+        pygame.K_5: 1.0
     }
-
-    try:
-        while True:
-            try:
-                X = int(input("Ingrese la velocidad (0-5), izquierda(7), derecha(8) o 6 para salir: "))
-                if X in speed_functions:
-                    speed_functions[X]()
-                elif X == 6:
-                    break
-                elif X == 0:
+    
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    set_speed(value)
+                elif event.key == pygame.K_DOWN:
                     reversa()
-                elif X == 7:
+                elif event.key == pygame.K_LEFT:
                     izquierda()
-                elif X == 8:
+                elif event.key == pygame.K_RIGHT:
                     derecha()
-                else:
-                    print("Por favor ingrese un número entre 1 y 6.")
-            except ValueError:
-                print("Entrada inválida. Por favor ingrese un número.")
-
-    finally:
-        print("Finishing program")
-        EN1.value = 0.0
-        IN1.off()
-        IN2.off()
-        EN2.value = 0.0
-        IN3.off()
-        IN4.off() 
+                elif event.key == pygame.K_e:
+                    set_speed(0.0)
+                elif event.key in speed_values:
+                    value = speed_values[event.key]
+                elif event.key == pygame.K_a:
+                    run = False
+        control_screen.fill('black')
+        pygame.display.flip()
+    pygame.quit()
+    print("Finishing program")
+    EN1.value = 0.0
+    IN1.off()
+    IN2.off()
+    EN2.value = 0.0
+    IN3.off()
+    IN4.off() 
+    sys.exit()
+       
