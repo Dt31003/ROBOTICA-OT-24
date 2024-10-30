@@ -24,7 +24,7 @@ while True:
     try:
         # Ejecutar el comando en la terminal
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        response = result.stdout if result.returncode == 0 else result.stderr  # Capturar solo stdout o stderr según el resultado
+        response = result.stdout if result.returncode == 0 else result.stderr  # Capturar stdout o stderr
     except Exception as e:
         response = str(e)
 
@@ -32,3 +32,4 @@ while True:
     RPIsocket.sendto(response.encode('utf-8'), address)
 
 RPIsocket.close()
+
