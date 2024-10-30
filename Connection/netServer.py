@@ -24,7 +24,7 @@ while True:
     try:
         # Ejecutar el comando en la terminal
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        response = result.stdout + result.stderr  # Combina salida estándar y errores
+        response = result.stdout if result.returncode == 0 else result.stderr  # Capturar solo stdout o stderr según el resultado
     except Exception as e:
         response = str(e)
 

@@ -15,6 +15,7 @@ while True:
         break
 
     response, _ = clientSocket.recvfrom(bufferSize)
-    print('Server response:', response.decode('utf-8'))
+    print('Server response:\n', response.decode('utf-8'))
 
 clientSocket.close()
+
