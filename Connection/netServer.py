@@ -1,8 +1,10 @@
 import socket
+import subprocess
 
 bufferSize = 1024
 serverPort = 2222
 serverIP = '192.168.0.34'
+
 RPIsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 RPIsocket.bind((serverIP, serverPort))
 
@@ -10,11 +12,23 @@ print('Server is UP and Listening...')
 
 while True:
     message, address = RPIsocket.recvfrom(bufferSize)
-    message = message.decode('utf-8')
-    
-    print(f'Message from client: {message}')
+    command = message.decode('utf-8')
+
+    print('Received command:', command)
     print('Client Address:', address[0])
-    
-    # Aquí puedes procesar el mensaje y decidir qué comando enviar
-    response = f'Server received: {message}'
+
+    if command.lower() == 'exit':
+        print('Closing server...')
+        break
+
+    try:
+        # Ejecutar el comando en la terminal
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        response = result.stdout + result.stderr  # Combina salida estándar y errores
+    except Exception as e:
+        response = str(e)
+
+    # Enviar respuesta al cliente
     RPIsocket.sendto(response.encode('utf-8'), address)
+
+RPIsocket.close()
