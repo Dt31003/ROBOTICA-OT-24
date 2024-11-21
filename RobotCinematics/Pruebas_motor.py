@@ -2,7 +2,6 @@
 #sudo pigpiod
 from gpiozero import LED, PWMLED, AngularServo, Servo
 from adafruit_servokit import ServoKit
-from gpiozero.pins.pigpio import PiGPIOFactory
 from time import sleep
 import pygame 
 import numpy as np
