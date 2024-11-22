@@ -2,6 +2,8 @@ from rplidar import RPLidar
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import pandas as pd
+
 # Par�metros de configuraci�n
 DEVICE_PATH = '/dev/ttyUSB0'  # Cambia esto seg�n tu puerto
 BAUD_RATE = 115200
@@ -50,15 +52,18 @@ try:
     ax2.set_ylim(0, 600)
     ax2.set_aspect('equal', 'box')
     ax2.grid(True)
-
+    ax2.set_xlabel('Degrees (°)')
+    ax2.set_ylabel('Distances (cm)')
     # Crear el grafico cartesiano utilizando angulos en grados y distancias
     ax2.scatter(np.degrees(angles), np.array(distances)/10, c=distances, cmap='plasma', s=10, lw=0, alpha=0.75)
 
     plt.tight_layout()
     plt.show()
 
-    raw_data = np.matrix[angles,distances]
-    print(raw_data)
+    data = {'Angle (radians)': angles, 'Distance (mm)': distances}
+    df = pd.DataFrame(data)
+    df.to_csv('lidar_scan_data.csv', index=False)
+
 
 finally:
     # Detener el motor y desconectar el LIDAR
