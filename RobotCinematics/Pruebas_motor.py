@@ -8,6 +8,40 @@ import numpy as np
 import sys
 import cv2 as cv
 import math
+from numpy import linalg as LA
+
+def compute_moments(frame,):
+    frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    ret, thresh = cv.threshold(frame_gray, 43, 255, 0)
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    i = 0
+    for c in contours:
+        # Calculate moments for each contour
+        M = cv.moments(c)
+            
+            # Check if the moment m00 is zero to avoid division by zero
+        if M["m00"] != 0:
+                
+                # Calculate the center of mass (centroid)
+                
+            if M["m10"]/10000  > 300 and M["m10"]/10000 < 600:
+                mu20 = float(M["m20"] - (M["m10"]**2 /M["m00"]))
+                mu02 = float(M["m02"] - (M["m01"]**2 /M["m00"]))
+                mu11 = float(M["m11"] - (M["m10"]*M["m01"]/M["m00"]))
+                J = np.matrix([[mu20, mu11],[mu11, mu02]])
+                eigenvalues, eigenvectors = LA.eig(J)
+                if eigenvalues[0] > eigenvalues[1]:
+                    angle = np.degrees(np.atan2(eigenvectors[0,0],eigenvectors[0,1]))
+                else: 
+                    angle = np.degrees(np.atan2(eigenvectors[1,0],eigenvectors[1,1]))
+                if angle > 90 and angle < 270:
+                    print("Turn to your left")
+                else:
+                    print("Turn to your right")
+            else:
+                # Handle the case where the contour has zero area (e.g., skip or set default coordinates)
+                continue
+
 
 def set_speed(value):
     "Set the motor speed using PWM."
@@ -42,11 +76,18 @@ def open_camera():
     return cap
 
 def inicializar_gripper(motors:ServoKit):
-    for i in range(0,4):
-        motors.servo[i].angle = 0
+    motors.servo[3].angle = 90 #gripper
+    motors.servo[2].angle = 80 #muneca
+    motors.servo[1].angle = 50# codo
+    motors.servo[0].angle = 180 #hombro
+
+
 
 def gripper(motors:ServoKit,angulo:int,i:int)->None:
-    motors.servo[i].angle = angulo
+    if i == 0:
+        motors.servo[i].angle = angulo
+    else:
+        motors.servo[i].angle = angulo
     
 def actualizarangulo(angulo:int,actualizacion:int)->int:
     angulo += 3*actualizacion 
@@ -59,6 +100,7 @@ def actualiar_camara(condicion:bool, camara:ServoKit):
     else:
         camara.servo[4].angle = 0
     sleep(2/1000)
+
 if __name__ == "__main__":
     pygame.init()
     control_screen = pygame.display.set_mode((240,180))
@@ -145,13 +187,15 @@ if __name__ == "__main__":
         if keys[pygame.K_SPACE]:
             camara = not camara
             actualiar_camara(camara,kit)
+        if keys[pygame.K_c]:
+            compute_moments(frame)
         if control:
             ret, frame = cap.read()
             if ret:
                 frame = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
                 cv.imshow('Camera',frame)
                 cv.waitKey(1)
-        print(angulo1)
+                compute_moments(frame)
         control_screen.fill('black')
         pygame.display.flip()
         
