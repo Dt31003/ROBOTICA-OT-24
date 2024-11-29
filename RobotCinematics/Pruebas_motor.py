@@ -11,7 +11,7 @@ import math
 from numpy import linalg as LA
 
 def compute_moments(frame,):
-    frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    frame_gray = frame
     ret, thresh = cv.threshold(frame_gray, 43, 255, 0)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     i = 0
@@ -24,18 +24,20 @@ def compute_moments(frame,):
                 
                 # Calculate the center of mass (centroid)
                 
-            if M["m10"]/10000  > 300 and M["m10"]/10000 < 600:
+            if M["m10"]/10000  > 250 and M["m10"]/10000 < 600:
                 mu20 = float(M["m20"] - (M["m10"]**2 /M["m00"]))
                 mu02 = float(M["m02"] - (M["m01"]**2 /M["m00"]))
                 mu11 = float(M["m11"] - (M["m10"]*M["m01"]/M["m00"]))
                 J = np.matrix([[mu20, mu11],[mu11, mu02]])
                 eigenvalues, eigenvectors = LA.eig(J)
                 if eigenvalues[0] > eigenvalues[1]:
-                    angle = np.degrees(np.atan2(eigenvectors[0,0],eigenvectors[0,1]))
+                    angle = np.degrees(math.atan2(eigenvectors[0,0],eigenvectors[0,1]))
                 else: 
-                    angle = np.degrees(np.atan2(eigenvectors[1,0],eigenvectors[1,1]))
-                if angle > 90 and angle < 270:
+                    angle = np.degrees(math.atan2(eigenvectors[1,0],eigenvectors[1,1]))
+                if angle > 90:
                     print("Turn to your left")
+                elif angle<0:
+                    print("Drop Off")
                 else:
                     print("Turn to your right")
             else:
@@ -54,7 +56,7 @@ def set_speed(value):
 
 def reversa():
     "Set the motor speed using PWM."
-    EN1.value = 0.7
+    EN1.value = 0.5
     IN1.off()
     IN2.on()
     IN3.off()
@@ -63,16 +65,16 @@ def reversa():
 
 def derecha():
     "Set the motor speed using PWM."
-    EN1.value = 0.2
+    EN1.value = 0.0
     EN2.value = 0.6
 
 def izquierda():
     "Set the motor speed using PWM."
     EN1.value = 0.6
-    EN2.value = 0.2
+    EN2.value = 0.0
 
 def open_camera():
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(-1)
     return cap
 
 def inicializar_gripper(motors:ServoKit):
@@ -80,26 +82,34 @@ def inicializar_gripper(motors:ServoKit):
     motors.servo[2].angle = 80 #muneca
     motors.servo[1].angle = 50# codo
     motors.servo[0].angle = 180 #hombro
+    motors.servo[15].angle = 180 #camara horizontal
+    motors.servo[14].angle = 0 #camara vertical 
 
-
+def cerrar_gripper(motors:ServoKit):
+    motors.servo[3].angle = 90 #gripper
+    sleep(1/2)
+    motors.servo[2].angle = 80 #muneca
+    sleep(1/2)
+    motors.servo[1].angle = 50# codo
+    sleep(1/2)
+    motors.servo[0].angle = 180 #hombro
+    sleep(1/2)
+    motors.servo[15].angle = 180 #camara horizontal
+    sleep(1/2)
+    motors.servo[14].angle = 0 #camara vertical
 
 def gripper(motors:ServoKit,angulo:int,i:int)->None:
-    if i == 0:
-        motors.servo[i].angle = angulo
-    else:
-        motors.servo[i].angle = angulo
+    motors.servo[i].angle = angulo
     
-def actualizarangulo(angulo:int,actualizacion:int)->int:
-    angulo += 3*actualizacion 
+def actualizarangulo(angulo:int,actualizacion:int,i:int)->int:
+    angulo += actualizacion 
+    if i == 3:
+        angulo = max(30,min(180,angulo))
+    else:
+        angulo = max(0,min(180,angulo))        
     sleep(0.005)
-    return max(0, min(180, angulo))
+    return angulo
     
-def actualiar_camara(condicion:bool, camara:ServoKit):
-    if condicion == True:
-        camara.servo[4].angle = 180
-    else:
-        camara.servo[4].angle = 0
-    sleep(2/1000)
 
 if __name__ == "__main__":
     pygame.init()
@@ -119,10 +129,12 @@ if __name__ == "__main__":
     kit = ServoKit(channels=16)
     inicializar_gripper(kit)
     #angulos de los servos
-    angulo1 = 0 
-    angulo2 = 0
-    angulo3 = 0
-    angulo4 = 0
+    angulo1 = 180 
+    angulo2 = 50
+    angulo3 = 80
+    angulo4 = 90
+    angulo_horizontal = 180
+    angulo_vertical = 0
     #funcion de velocidades
     speed_values = {
         pygame.K_0: 0.0,
@@ -161,45 +173,53 @@ if __name__ == "__main__":
         if keys[pygame.K_RIGHT]:
             derecha()
         if keys[pygame.K_y]:
-            angulo1 = actualizarangulo(angulo1,1)
+            angulo1 = actualizarangulo(angulo1,1,0)
             gripper(kit,angulo1,0)
         if keys[pygame.K_h]:
-            angulo1 = actualizarangulo(angulo1,-1)
+            angulo1 = actualizarangulo(angulo1,-1,0)
             gripper(kit,angulo1,0)
         if keys[pygame.K_u]:
-            angulo2 = actualizarangulo(angulo2,1)
+            angulo2 = actualizarangulo(angulo2,1,1)
             gripper(kit,angulo2,1)
         if keys[pygame.K_j]:
-            angulo2 = actualizarangulo(angulo2,-1)
+            angulo2 = actualizarangulo(angulo2,-1,1)
             gripper(kit,angulo2,1)
         if keys[pygame.K_i]:
-            angulo3 = actualizarangulo(angulo3,1)
+            angulo3 = actualizarangulo(angulo3,1,2)
             gripper(kit,angulo3,2)
         if keys[pygame.K_k]:
-            angulo3 = actualizarangulo(angulo3,-1)
+            angulo3 = actualizarangulo(angulo3,-1,2)
             gripper(kit,angulo3,2)
         if keys[pygame.K_o]:
-            angulo4 = actualizarangulo(angulo4,1)
+            angulo4 = actualizarangulo(angulo4,1,3)
             gripper(kit,angulo4,3)
         if keys[pygame.K_l]:
-            angulo4 = actualizarangulo(angulo4,-1)
+            angulo4 = 30
             gripper(kit,angulo4,3)  
-        if keys[pygame.K_SPACE]:
-            camara = not camara
-            actualiar_camara(camara,kit)
-        if keys[pygame.K_c]:
+        if keys[pygame.K_r]: #Angulo horizontal
+            angulo_horizontal = actualizarangulo(angulo_horizontal,1,15)
+            gripper(kit,angulo_horizontal,15)
+        if keys[pygame.K_f]: #Angulo horizontal
+            angulo_horizontal = actualizarangulo(angulo_horizontal,-1,15)
+            gripper(kit,angulo_horizontal,15)
+        if keys[pygame.K_t]:
+            angulo_vertical = actualizarangulo(angulo_vertical,1,14)
+            gripper(kit,angulo_vertical,14)
+        if keys[pygame.K_g]:
+            angulo_vertical = actualizarangulo(angulo_vertical,-1,14)
+            gripper(kit,angulo_vertical,14)
+        if keys[pygame.K_c] and control:
             compute_moments(frame)
         if control:
             ret, frame = cap.read()
+            frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             if ret:
-                frame = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
                 cv.imshow('Camera',frame)
                 cv.waitKey(1)
-                compute_moments(frame)
         control_screen.fill('black')
         pygame.display.flip()
         
-        
+    cerrar_gripper(kit)
     cv.destroyAllWindows()   
     cap.release()
     pygame.quit()
